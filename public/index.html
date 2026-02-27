@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Coloc' Courses 🛒</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     ÉCRAN 1 — LOGIN (choix du pseudo)
+══════════════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-bg">
+    <span class="login-deco deco-1">🥬</span>
+    <span class="login-deco deco-2">🥕</span>
+    <span class="login-deco deco-3">🍋</span>
+    <span class="login-deco deco-4">🧅</span>
+    <span class="login-deco deco-5">🍎</span>
+    <span class="login-deco deco-6">🥦</span>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <span class="logo-emoji">🛒</span>
+      <h1>Coloc' Courses</h1>
+      <p>La liste de courses partagée de votre coloc'</p>
+    </div>
+    <div class="login-form">
+      <label>Choisissez un avatar</label>
+      <div class="avatar-row">
+        <button class="avatar-btn active" data-emoji="🧑" onclick="selectAvatar(this)">🧑</button>
+        <button class="avatar-btn" data-emoji="👩" onclick="selectAvatar(this)">👩</button>
+        <button class="avatar-btn" data-emoji="🧔" onclick="selectAvatar(this)">🧔</button>
+        <button class="avatar-btn" data-emoji="👦" onclick="selectAvatar(this)">👦</button>
+        <button class="avatar-btn" data-emoji="👧" onclick="selectAvatar(this)">👧</button>
+        <button class="avatar-btn" data-emoji="🐱" onclick="selectAvatar(this)">🐱</button>
+      </div>
+      <label>Votre prénom</label>
+      <input type="text" id="login-name" placeholder="Ex : Léa, Tom, Marc…"
+             maxlength="16" autocomplete="off"
+             onkeydown="if(event.key==='Enter') doLogin()" />
+      <button class="btn-main" onclick="doLogin()">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     ÉCRAN 2 — SÉLECTION / CRÉATION DE COLOC
+══════════════════════════════════════════════ -->
+<div id="screen-coloc" class="screen">
+  <div class="coloc-screen-bg"></div>
+  <div class="coloc-screen-inner">
+
+    <div class="coloc-header">
+      <div class="user-welcome" id="coloc-welcome"></div>
+    </div>
+
+    <!-- Onglets Créer / Rejoindre -->
+    <div class="coloc-tabs">
+      <button class="coloc-tab active" onclick="switchColocTab('create')">🏠 Créer une coloc</button>
+      <button class="coloc-tab"        onclick="switchColocTab('join')">🔑 Rejoindre</button>
+    </div>
+
+    <!-- Formulaire Créer -->
+    <div class="coloc-panel active" id="panel-create">
+      <div class="coloc-emoji-row" id="coloc-emoji-row">
+        <button class="coloc-emoji-btn active" data-emoji="🏠">🏠</button>
+        <button class="coloc-emoji-btn" data-emoji="🏡">🏡</button>
+        <button class="coloc-emoji-btn" data-emoji="🏢">🏢</button>
+        <button class="coloc-emoji-btn" data-emoji="🛖">🛖</button>
+        <button class="coloc-emoji-btn" data-emoji="🏰">🏰</button>
+        <button class="coloc-emoji-btn" data-emoji="⛺">⛺</button>
+      </div>
+      <input type="text" id="coloc-name-input"
+             placeholder="Nom de votre coloc (ex: Appart 12B)"
+             maxlength="30"
+             onkeydown="if(event.key==='Enter') createColoc()" />
+      <button class="btn-main" onclick="createColoc()">Créer la coloc →</button>
+    </div>
+
+    <!-- Formulaire Rejoindre -->
+    <div class="coloc-panel" id="panel-join">
+      <p class="panel-hint">Entrez le code fourni par votre colocataire</p>
+      <input type="text" id="coloc-code-input"
+             placeholder="Ex : SOLEIL-73"
+             maxlength="12"
+             oninput="this.value = this.value.toUpperCase()"
+             onkeydown="if(event.key==='Enter') joinColoc()" />
+      <button class="btn-main" onclick="joinColoc()">Rejoindre →</button>
+    </div>
+
+    <!-- Mes colocs récentes (localStorage) -->
+    <div id="my-colocs-section" style="display:none">
+      <div class="my-colocs-title">Mes colocs récentes</div>
+      <div id="my-colocs-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     ÉCRAN 3 — APPLICATION PRINCIPALE
+══════════════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+
+  <!-- ── Header ── -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span id="header-coloc-emoji">🏠</span>
+      <span class="brand-name" id="header-coloc-name">Coloc'</span>
+    </div>
+    <div class="header-center">
+      <div class="online-pills" id="online-pills"></div>
+    </div>
+    <div class="header-right">
+      <!-- Code coloc affiché / copiable -->
+      <button class="coloc-code-chip" id="coloc-code-chip"
+              onclick="copyColocCode()" title="Cliquer pour copier">
+        <span id="chip-code">—</span>
+        <span class="chip-copy">📋</span>
+      </button>
+      <!-- Bouton switch de coloc -->
+      <button class="btn-switch-coloc" onclick="switchColoc()" title="Changer de coloc">
+        ⇄
+      </button>
+      <button class="btn-mode-course" id="btn-mode-course" onclick="toggleModeCourse()">
+        <span>🏪</span>
+        <span class="btn-mode-label">Mode Course</span>
+      </button>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+  </header>
+
+  <!-- ── Navigation ── -->
+  <nav class="app-nav">
+    <button class="nav-tab active" data-view="liste" onclick="switchView('liste')">
+      📋 Liste
+      <span class="nav-badge" id="badge-liste" style="display:none">0</span>
+    </button>
+    <button class="nav-tab" data-view="chat" onclick="switchView('chat')">
+      💬 Chat
+      <span class="nav-badge" id="badge-chat" style="display:none">0</span>
+    </button>
+  </nav>
+
+  <!-- ── Contenu ── -->
+  <main class="app-main">
+
+    <!-- ════ VUE LISTE ════ -->
+    <section class="view active" id="view-liste">
+
+      <!-- Toolbar -->
+      <div class="list-toolbar">
+        <div class="search-box">
+          <span class="search-ico">🔍</span>
+          <input type="text" id="search-input"
+                 placeholder="Rechercher un article…"
+                 oninput="debounceSearch()" />
+        </div>
+        <div class="toolbar-filters">
+          <select id="filter-status" onchange="loadItems()">
+            <option value="">Tous les articles</option>
+            <option value="pending">⏳ À acheter</option>
+            <option value="done">✅ Achetés</option>
+          </select>
+          <select id="filter-cat" onchange="loadItems()">
+            <option value="">Toutes catégories</option>
+            <option value="Fruits & Légumes">🥬 Fruits & Légumes</option>
+            <option value="Viandes & Poissons">🥩 Viandes & Poissons</option>
+            <option value="Produits laitiers">🧀 Produits laitiers</option>
+            <option value="Épicerie">🫙 Épicerie</option>
+            <option value="Boissons">🥤 Boissons</option>
+            <option value="Hygiène">🧴 Hygiène</option>
+            <option value="Surgelés">🧊 Surgelés</option>
+            <option value="Boulangerie">🥖 Boulangerie</option>
+            <option value="Autre">📦 Autre</option>
+          </select>
+          <select id="sort-by" onchange="loadItems()">
+            <option value="">Par ajout</option>
+            <option value="name">A → Z</option>
+            <option value="category">Catégorie</option>
+            <option value="urgent">Urgent d'abord</option>
+            <option value="dueDate">Date d'échéance</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Résumé panier -->
+      <div class="basket-summary">
+        <span id="summary-text">0 article</span>
+        <span class="summary-sep">·</span>
+        <span id="summary-price">0,00 €</span>
+        <span class="summary-sep">·</span>
+        <span id="summary-done">0 acheté</span>
+        <button class="btn-clear-bought" id="btn-clear"
+                onclick="clearBought()" style="display:none">
+          🗑 Vider
+        </button>
+      </div>
+
+      <!-- Liste des articles -->
+      <div id="items-container">
+        <div class="empty-list" id="empty-list">
+          <div class="empty-emoji">🧺</div>
+          <p>La liste est vide !</p>
+          <p class="empty-sub">Ajoutez votre premier article ci-dessous.</p>
+        </div>
+      </div>
+
+      <!-- Formulaire d'ajout -->
+      <div class="add-bar">
+        <div class="add-bar-main">
+          <input type="text" id="quick-name"
+                 placeholder="Ajouter un article…" maxlength="60"
+                 onkeydown="if(event.key==='Enter') quickAdd()"
+                 onfocus="expandAddBar()" />
+          <button class="btn-add-quick" onclick="quickAdd()">+</button>
+        </div>
+        <div class="add-bar-extra" id="add-bar-extra">
+          <div class="extra-row">
+            <select id="quick-cat">
+              <option value="Autre">📦 Autre</option>
+              <option value="Fruits & Légumes">🥬 Fruits & Légumes</option>
+              <option value="Viandes & Poissons">🥩 Viandes & Poissons</option>
+              <option value="Produits laitiers">🧀 Produits laitiers</option>
+              <option value="Épicerie">🫙 Épicerie</option>
+              <option value="Boissons">🥤 Boissons</option>
+              <option value="Hygiène">🧴 Hygiène</option>
+              <option value="Surgelés">🧊 Surgelés</option>
+              <option value="Boulangerie">🥖 Boulangerie</option>
+            </select>
+            <input type="number" id="quick-qty" value="1" min="0.1" step="0.5" style="width:70px" />
+            <select id="quick-unit">
+              <option value="pcs">pcs</option>
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+              <option value="L">L</option>
+              <option value="cL">cL</option>
+              <option value="bouteille">bouteille</option>
+              <option value="boîte">boîte</option>
+              <option value="sachet">sachet</option>
+            </select>
+          </div>
+          <div class="extra-row">
+            <input type="number" id="quick-price" placeholder="Prix (€)" step="0.01" min="0" style="flex:1" />
+            <input type="text"   id="quick-assigned" placeholder="Pour qui ?" maxlength="16" style="flex:1" />
+            <input type="date"   id="quick-due" style="flex:1" />
+          </div>
+          <div class="extra-row">
+            <input type="text" id="quick-note" placeholder="Note…" maxlength="100" style="flex:1" />
+            <label class="urgent-toggle">
+              <input type="checkbox" id="quick-urgent" />
+              <span>⚡ Urgent</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions en bas de liste -->
+      <div class="list-actions-bar">
+        <button class="btn-go-shopping" onclick="goShopping()">
+          🛒 Je vais faire les courses !
+        </button>
+        <!-- NOUVEAU : Bouton de validation de liste -->
+        <button class="btn-validate-list" onclick="validateList()">
+          ✅ Valider la liste
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ════ VUE CHAT ════ -->
+    <section class="view" id="view-chat">
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="typing-indicator" id="typing-indicator" style="display:none">
+        <span id="typing-text"></span>
+        <span class="typing-dots"><span></span><span></span><span></span></span>
+      </div>
+      <div class="chat-input-zone">
+        <input type="text" id="chat-input"
+               placeholder="Message à la coloc'…" maxlength="300"
+               onkeydown="handleChatKeydown(event)"
+               oninput="handleTyping()" />
+        <button class="btn-send" onclick="sendMessage()">→</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MODAL — Édition d'un article
+══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-edit" onclick="closeEditModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>✏️ Modifier l'article</h3>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label>Nom *</label>
+        <input type="text" id="edit-name" maxlength="60" />
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Catégorie</label>
+          <select id="edit-cat">
+            <option value="Autre">📦 Autre</option>
+            <option value="Fruits & Légumes">🥬 Fruits & Légumes</option>
+            <option value="Viandes & Poissons">🥩 Viandes & Poissons</option>
+            <option value="Produits laitiers">🧀 Produits laitiers</option>
+            <option value="Épicerie">🫙 Épicerie</option>
+            <option value="Boissons">🥤 Boissons</option>
+            <option value="Hygiène">🧴 Hygiène</option>
+            <option value="Surgelés">🧊 Surgelés</option>
+            <option value="Boulangerie">🥖 Boulangerie</option>
+          </select>
+        </div>
+        <div class="field-group" style="max-width:80px">
+          <label>Qté</label>
+          <input type="number" id="edit-qty" min="0.1" step="0.5" />
+        </div>
+        <div class="field-group" style="max-width:110px">
+          <label>Unité</label>
+          <select id="edit-unit">
+            <option value="pcs">pcs</option>
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="L">L</option>
+            <option value="cL">cL</option>
+            <option value="bouteille">bouteille</option>
+            <option value="boîte">boîte</option>
+            <option value="sachet">sachet</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Prix estimé (€)</label>
+          <input type="number" id="edit-price" step="0.01" min="0" />
+        </div>
+        <div class="field-group">
+          <label>Pour qui ?</label>
+          <input type="text" id="edit-assigned" maxlength="16" />
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label>Date d'échéance</label>
+          <input type="date" id="edit-due" />
+        </div>
+        <div class="field-group">
+          <label>Note</label>
+          <input type="text" id="edit-note" maxlength="100" />
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="urgent-toggle big">
+          <input type="checkbox" id="edit-urgent" />
+          <span>⚡ Urgent</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEditModal()">Annuler</button>
+      <button class="btn-main" onclick="saveEdit()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Confirmation validation liste -->
+<div class="modal-overlay" id="modal-validate" onclick="closeValidateModal(event)">
+  <div class="modal-box modal-box--small">
+    <div class="modal-header">
+      <h3>✅ Valider la liste</h3>
+      <button class="modal-close" onclick="closeValidateModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="validate-info" id="validate-info"></div>
+      <p class="validate-warning">
+        Les articles <strong>achetés</strong> seront supprimés définitivement.<br/>
+        Les articles <strong>non achetés</strong> resteront dans la liste.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeValidateModal()">Annuler</button>
+      <button class="btn-validate-confirm" onclick="confirmValidation()">
+        ✅ Confirmer la validation
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
